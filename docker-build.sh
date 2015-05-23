@@ -1,9 +1,10 @@
 #!/bin/bash
 
-if [ ! -z "$1" ]; then
-  version=":$1"
-else
-  version=":7-jre7"
+if [ $# -ne 1 ]; then
+  echo "Provide version"
+  exit 42
 fi
+
+version=":$1"
 
 docker build -f Dockerfile$version --rm -t seges/tomcat$version .
