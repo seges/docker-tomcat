@@ -1,0 +1,53 @@
+FROM anapsix/alpine-java:jre8
+MAINTAINER gazo@seges.sk
+
+
+ENV LANG en_US.utf8
+
+ENV TOMCAT_VERSION 8.0.30
+ENV TOMCAT_URL https://archive.apache.org/dist/tomcat/tomcat-8/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz
+
+ENV CATALINA_HOME /opt/tomcat
+ENV PATH $PATH:$CATALINA_HOME/bin
+
+ENV JMX false
+ENV JMX_PORT 9004
+ENV JMX_HOSTNAME localhost
+
+ENV DEBUG_TOMCAT false
+ENV DEBUG_PORT 8000
+ENV DEBUG_SUSPEND n
+
+ENV MINMEM 128m
+ENV MAXMEM 512m
+ENV XSS 228k
+ENV PATH $PATH:$CATALINA_HOME/bin
+
+
+RUN apk add --update  tar curl && \
+    rm /var/cache/apk/* && \
+
+    mkdir -p $CATALINA_HOME\
+    && addgroup tomcat\
+    && adduser -h $CATALINA_HOME -D -s /bin/bash -G tomcat tomcat\
+    && set -x \
+    && cd $CATALINA_HOME\
+    && curl -fSL "$TOMCAT_URL" -o tomcat.tar.gz \
+    && tar -xvf tomcat.tar.gz --strip-components=1 \
+    && chown -R tomcat:tomcat $CATALINA_HOME\
+    && chmod -R g-s /opt\
+    && rm bin/*.bat \
+    && rm tomcat.tar.gz* \
+    && rm -rf webapps/*
+
+USER tomcat
+
+WORKDIR $CATALINA_HOME
+
+USER tomcat
+ADD /bin/setenv.sh $CATALINA_HOME/bin/
+ADD /lib $CATALINA_HOME/lib
+
+EXPOSE 8080 9004 8000
+
+CMD ["bin/catalina.sh", "run"]
